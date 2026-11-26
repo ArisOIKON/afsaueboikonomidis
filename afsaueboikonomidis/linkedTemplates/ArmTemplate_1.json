@@ -635,7 +635,7 @@
 							"scripts": [
 								{
 									"type": "Query",
-									"text": "DELETE FROM dw.DimCustomer;\nINSERT INTO dw.DimCustomer (\nCustomerID,\nCustomerType,\nFirstName,\nLastName,\nMiddleName,\nAge\n)\nSELECT\nc.CustomerID,\nCASE\nWHEN c.PersonID IS NOT NULL THEN 'Person'\nWHEN c.StoreID IS NOT NULL THEN 'Store'\nELSE 'Unknown'\nEND AS CustomerType,\np.First_Name,\np.Last_Name,\np.Middle_Name,\np.Age\nFROM wrk.Customer c\nLEFT JOIN wrk.Person p\nON c.PersonID = p.BusinessEntityID;"
+									"text": "DELETE FROM dw.DimCustomer;\nINSERT INTO dw.DimCustomer (\nCustomerID,\nCustomerType,\nFirstName,\nLastName,\nMiddleName,\nAge\n)\nSELECT\nc.CustomerID,\nCASE\nWHEN c.PersonID IS NOT NULL THEN 'Person'\nWHEN c.StoreID IS NOT NULL THEN 'Store'\nELSE 'Unknown'\nEND AS CustomerType,\np.FirstName,\np.LastName,\np.MiddleName,\np.Age\nFROM wrk.Customer c\nLEFT JOIN wrk.Person p\nON c.PersonID = p.BusinessEntityID;"
 								}
 							],
 							"scriptBlockExecutionTimeout": "02:00:00"
