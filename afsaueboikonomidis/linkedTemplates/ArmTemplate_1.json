@@ -1,0 +1,585 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "afsaueboikonomidis"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/union_berlin')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DelimitedText2",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						},
+						{
+							"dataset": {
+								"referenceName": "DelimitedText3",
+								"type": "DatasetReference"
+							},
+							"name": "source2"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "AzureSqlTable6",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "union1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          SalesOrderID as string,",
+						"          RevisionNumber as string,",
+						"          OrderDate as string,",
+						"          DueDate as string,",
+						"          ShipDate as string,",
+						"          Status as string,",
+						"          OnlineOrderFlag as string,",
+						"          SalesOrderNumber as string,",
+						"          PurchaseOrderNumber as string,",
+						"          AccountNumber as string,",
+						"          CustomerID as string,",
+						"          SalesPersonID as string,",
+						"          TerritoryID as string,",
+						"          BillToAddressID as string,",
+						"          ShipToAddressID as string,",
+						"          ShipMethodID as string,",
+						"          CreditCardID as string,",
+						"          CreditCardApprovalCode as string,",
+						"          CurrencyRateID as string,",
+						"          SubTotal as string,",
+						"          TaxAmt as string,",
+						"          Freight as string,",
+						"          TotalDue as string,",
+						"          Comment as string,",
+						"          rowguid as string,",
+						"          ModifiedDate as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> source1",
+						"source(output(",
+						"          SalesOrderID as string,",
+						"          RevisionNumber as string,",
+						"          OrderDate as string,",
+						"          DueDate as string,",
+						"          ShipDate as string,",
+						"          Status as string,",
+						"          OnlineOrderFlag as string,",
+						"          SalesOrderNumber as string,",
+						"          PurchaseOrderNumber as string,",
+						"          AccountNumber as string,",
+						"          CustomerID as string,",
+						"          SalesPersonID as string,",
+						"          TerritoryID as string,",
+						"          BillToAddressID as string,",
+						"          ShipToAddressID as string,",
+						"          ShipMethodID as string,",
+						"          CreditCardID as string,",
+						"          CreditCardApprovalCode as string,",
+						"          CurrencyRateID as string,",
+						"          SubTotal as string,",
+						"          TaxAmt as string,",
+						"          Freight as string,",
+						"          TotalDue as string,",
+						"          Comment as string,",
+						"          rowguid as string,",
+						"          ModifiedDate as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> source2",
+						"source1, source2 union(byName: true)~> union1",
+						"union1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/final_etl')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Truncate_Staging",
+						"type": "Script",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "etl_dw_1",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "BEGIN\nIF OBJECT_ID('stg.salesorderheader', 'U') IS NOT NULL\n TRUNCATE TABLE stg.salesorderheader;\nIF OBJECT_ID('stg.salesorderdetail', 'U') IS NOT NULL\n TRUNCATE TABLE stg.salesorderdetail;\nIF OBJECT_ID('stg.customer', 'U') IS NOT NULL\n TRUNCATE TABLE stg.customer;\nIF OBJECT_ID('stg.person', 'U') IS NOT NULL\n TRUNCATE TABLE stg.person;\nIF OBJECT_ID('stg.product', 'U') IS NOT NULL\n TRUNCATE TABLE stg.product;\nIF OBJECT_ID('stg.productsubcategory', 'U') IS NOT NULL\n TRUNCATE TABLE stg.productsubcategory;\nIF OBJECT_ID('stg.productcategory', 'U') IS NOT NULL\n TRUNCATE TABLE stg.productcategory;\nIF OBJECT_ID('stg.salesterritory', 'U') IS NOT NULL\n TRUNCATE TABLE stg.salesterritory;\nIF OBJECT_ID('stg.store', 'U') IS NOT NULL\n TRUNCATE TABLE stg.store;\nEND\n\n"
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
+						}
+					},
+					{
+						"name": "Select_Tables_From_OLTP",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Truncate_Staging",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "SELECT\n t.TABLE_SCHEMA AS schema_name,\n t.TABLE_NAME AS table_name\nFROM INFORMATION_SCHEMA.TABLES t\nWHERE TABLE_TYPE = 'BASE TABLE'\nAND (t.TABLE_SCHEMA + '.' + t.TABLE_NAME) IN (\n 'Sales.SalesOrderDetail',\n 'Sales.Customer',\n 'Person.Person',\n 'Sales.Store',\n 'Production.Product',\n 'Production.ProductCategory',\n 'Sales.SalesTerritory'\n )\nORDER BY t.TABLE_SCHEMA, t.TABLE_NAME;",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "AzureSqlTable2",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "Loop_OLTP",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Select_Tables_From_OLTP",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Select_Tables_From_OLTP').output.value",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Copy_OLTP_tables",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "AzureSqlSink",
+											"writeBehavior": "insert",
+											"sqlWriterUseTableLock": false,
+											"tableOption": "autoCreate",
+											"disableMetricsCollection": false
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "AzureSqlTable3",
+											"type": "DatasetReference",
+											"parameters": {
+												"schema": {
+													"value": "@item().schema_name",
+													"type": "Expression"
+												},
+												"table": {
+													"value": "@item().table_name",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "AzureSqlTable4",
+											"type": "DatasetReference",
+											"parameters": {
+												"schema": "stg",
+												"table": {
+													"value": "@item().table_name",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "productsubcategory",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Loop_OLTP",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"tableOption": "autoCreate",
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DelimitedText1",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "AzureSqlTable5",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "Data flow1",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "productsubcategory",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "union_berlin",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {},
+									"source2": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "Lookup1",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Script1",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "SELECT\n t.TABLE_SCHEMA AS schema_name,\n t.TABLE_NAME AS table_name\nFROM INFORMATION_SCHEMA.TABLES t\nWHERE TABLE_TYPE = 'BASE TABLE'\n AND (t.TABLE_SCHEMA + '.' + t.TABLE_NAME) IN (\n 'stg.SalesOrderDetail',\n 'stg.Customer',\n 'stg.Person',\n 'stg.Store',\n 'stg.Product',\n 'stg.ProductCategory',\n 'stg.ProductSubcategory',\n 'stg.SalesOrderHeader',\n 'stg.SalesTerritory'\n )\nORDER BY t.TABLE_SCHEMA, t.TABLE_NAME;",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "AzureSqlTable7",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "Script1",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "Data flow1",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "etl_dw_1",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "IF OBJECT_ID('wrk.ProductCategory', 'U') IS NOT NULL\n TRUNCATE TABLE wrk.ProductCategory;\nIF OBJECT_ID('wrk.Customer', 'U') IS NOT NULL\n TRUNCATE TABLE wrk.Customer;\nIF OBJECT_ID('wrk.ProductSubcategory', 'U') IS NOT NULL\n TRUNCATE TABLE wrk.ProductSubcategory;\nIF OBJECT_ID('wrk.SalesOrderHeader', 'U') IS NOT NULL\n TRUNCATE TABLE wrk.SalesOrderHeader;\nIF OBJECT_ID('wrk.SalesOrderDetail', 'U') IS NOT NULL\n TRUNCATE TABLE wrk.SalesOrderDetail;\nIF OBJECT_ID('wrk.Store', 'U') IS NOT NULL\n TRUNCATE TABLE wrk.Store;\nIF OBJECT_ID('wrk.SalesTerritory', 'U') IS NOT NULL\n TRUNCATE TABLE wrk.SalesTerritory;\nIF OBJECT_ID('wrk.Person', 'U') IS NOT NULL\n TRUNCATE TABLE wrk.Person;\nIF OBJECT_ID('wrk.pre_fact', 'U') IS NOT NULL\n TRUNCATE TABLE wrk.pre_fact;"
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
+						}
+					},
+					{
+						"name": "Loop STG",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Lookup1",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup1').output.value",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Copy to WRK",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "AzureSqlSink",
+											"writeBehavior": "insert",
+											"sqlWriterUseTableLock": false,
+											"tableOption": "autoCreate",
+											"disableMetricsCollection": false
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "AzureSqlTable8",
+											"type": "DatasetReference",
+											"parameters": {
+												"schema": {
+													"value": "@item().schema_name",
+													"type": "Expression"
+												},
+												"table": {
+													"value": "@item().table_name",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "AzureSqlTable9",
+											"type": "DatasetReference",
+											"parameters": {
+												"schema": "wrk",
+												"table": {
+													"value": "@item().table_name",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "Data flow2",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "Loop STG",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "Name and age",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/union_berlin')]"
+			]
+		}
+	]
+}
